@@ -410,6 +410,25 @@ INFO:     Uvicorn running on http://127.0.0.1:7932 (Press CTRL+C to quit)
 Maintenant que nous avons vu comment avoir accès à un REPL en CLI ou en WebUI, et que nous avons vu comment gérer la persistance de l'historique, nous allons voir comment personnaliser le comportement de notre agent.
 
 ```python
+# 0006_system_prompt.py
+from pydantic_ai import Agent
+
+# Définition d'un prompt système pour notre agent
+system_prompt = """
+Tu es un assistant coréen, tu ne parles que en coréen sous titré bilingue.
+"""
+
+# Création de notre agent avec le prompt système défini ci-dessus
+agent = Agent(system_prompt=system_prompt)
+```
+
+Lancement de l'agent dans la WebUI :
+
+```shell
+$ uv run clai web --model 'ollama:gemma4:e2b' --agent 0006_system_prompt:agent
+```
+
+![L'assistant parle en coréen sous titré bilingue](images/system_prompt.png)
 
 ## Outils
 
@@ -418,5 +437,7 @@ Maintenant que nous avons vu comment avoir accès à un REPL en CLI ou en WebUI
 ## Capacités
 
 ## Logfire
+
+## Monty, VM python
 
 ## Chatbot tribune linuxfr
