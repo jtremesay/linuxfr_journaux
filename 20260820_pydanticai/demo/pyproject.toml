@@ -8,5 +8,6 @@ authors = [
 ]
 requires-python = ">=3.14"
 dependencies = [
+    "clai>=2.32.1",
     "pydantic-ai-slim[openai]>=2.32.1",
 ]

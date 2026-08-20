@@ -323,3 +323,59 @@ Bot: Basé sur notre conversation, tu m'as dit que tu t'appelles **Bob** !
 Si tu voulais me dire autre chose, n'hésite pas à me le faire savoir ! 😊
 Vous: 
 ```
+
+## CLAI
+
+Il faut avouer que notre REPL pue un peu des fesses. Mais ça tombe bien, Pydantic AI peut utiliser [CLAI](https://pydantic.dev/docs/ai/integrations/cli/#_top) pour nous simplifier la vie.
+
+```shell
+$ uv add clai
+```
+
+```python
+# 0005_clai.py
+from pydantic_ai import Agent
+
+agent = Agent("ollama:gemma4:e2b")
+
+# Lancer le REPL de l'agent
+agent.to_cli_sync()
+```
+
+```shell
+$ uv run 0005_clai.py
+pydantic-ai ➤ bonjour !
+Bonjour ! Comment allez-vous ? 😊
+
+Comment puis-je vous aider aujourd'hui ?
+
+pydantic-ai ➤ je suis bob
+Enchanté de faire votre connaissance, Bob ! 👋
+
+Que puis-je faire pour vous ? Avez-vous une question, besoin d'aide pour quelque chose, ou souhaitez-vous simplement discuter ?
+
+pydantic-ai ➤ qui suis-je ?
+C'est une question très profonde !
+
+En tant qu'intelligence artificielle, je n'ai aucune information personnelle sur vous, Bob, sauf ce que vous me dites. Je ne peux pas savoir qui vous êtes dans le sens personnel (votre histoire, vos sentiments, votre identité réelle).                                                                                     
+
+Pour moi, vous êtes :
+
+ • Un utilisateur qui interagit avec moi.                                                                                                                                                                                                                                                                                      
+ • Une personne qui cherche à communiquer ou à échanger.
+
+Si vous souhaitez me dire qui vous êtes (vos centres d'intérêt, ce que vous faites, ou pourquoi vous posez cette question), je serai ravi d'écouter ! 😊                                                                                                                                                                       
+pydantic-ai ➤
+```
+
+## Web UI
+
+## Prompt système
+
+## Outils
+
+## MCP
+
+## Capacités
+
+## Logfire
