@@ -159,7 +159,7 @@ $ export OLLAMA_BASE_URL='http://localhost:11434/v1'
 ## Votre première inférence
 
 ```python
-# 0001_first_inference.py
+# first_inference.py
 from pydantic_ai import Agent
 
 # Création de notre agent
@@ -173,7 +173,7 @@ print(r.output)
 ```
 
 ```shell
-$ uv run 0001_first_inference.py
+$ uv run first_inference.py
 Bonjour ! Comment puis-je vous aider aujourd'hui ?
 ```
 
@@ -186,7 +186,7 @@ Oui, c'était pas très passionnant. Mais maintenant vous pouvez faire des infé
 Pour rendre le chatbot interactif, on peut faire un REPL (Read-Eval-Print Loop) :
 
 ```python
-# 0002_repl.py
+# repl.py
 from pydantic_ai import Agent
 
 agent = Agent("ollama:gemma4:e2b")
@@ -211,7 +211,7 @@ while True:
 ```
 
 ```shell
-$ uv run 0002_repl.py 
+$ uv run repl.py 
 Vous: bonjour !
 Bot: Bonjour ! Comment puis-je vous aider aujourd'hui ? 😊
 Vous: je suis bob !
@@ -228,7 +228,7 @@ C'est à nous de gérer la mémoire.
 ## Historique
 
 ```python
-# 0003_history.py
+# history.py
 from pydantic_ai import Agent
 
 agent = Agent("ollama:gemma4:e2b")
@@ -253,7 +253,7 @@ while True:
 ```
 
 ```shell
-$ uv run 0003_history.py 
+$ uv run history.py 
 Vous: Bonjour !
 Bot: Bonjour ! Comment puis-je vous aider aujourd'hui ?
 Vous: je suis Bob
@@ -275,7 +275,7 @@ Cette fois-ci, le bot se souvient de ce que je lui ai dit. Il a gardé en mémoi
 Maintenant, nous allons voir comment rendre l'historique persistant entre les executions du programme.
 
 ```python
-# 0004_persistant_history.py
+# persistant_history.py
 from pathlib import Path
 
 from pydantic_ai import Agent
@@ -311,14 +311,14 @@ while True:
 ```
 
 ```shell
-$ uv run 0004_persistant_history.py 
+$ uv run persistant_history.py 
 Vous: bonjour ! je suis Bob !
 Bot: Bonjour Bob ! Enchanté de faire ta connaissance. 😊
 
 Comment puis-je t'aider aujourd'hui ?
 Vous: 
 Au revoir !
-$ uv run 0004_persistant_history.py
+$ uv run persistant_history.py
 Vous: qui suis-je ?
 Bot: Basé sur notre conversation, tu m'as dit que tu t'appelles **Bob** !
 
@@ -335,7 +335,7 @@ $ uv add clai
 ```
 
 ```python
-# 0005_clai.py
+# clai.py
 from pydantic_ai import Agent
 
 agent = Agent("ollama:gemma4:e2b")
@@ -345,7 +345,7 @@ agent.to_cli_sync()
 ```
 
 ```shell
-$ uv run 0005_clai.py
+$ uv run clai.py
 pydantic-ai ➤ bonjour !
 Bonjour ! Comment allez-vous ? 😊
 
@@ -373,15 +373,15 @@ pydantic-ai ➤
 Remarque : y'a trouzemille façon d'utiliser `clai` en tant qu'outil cli. Par exemple, vous pouvez l'utiliser pour lancer votre agent directement depuis la ligne de commande :
 
 ```python
-# 0006_clai_cli.py
+# clai_cli.py
 from pydantic_ai import Agent
 
 agent = Agent()
 ```
 
 ```shell
-$ uv run clai --model 'ollama:gemma4:e2b' --agent 0005_clai_cli:agent
-clai - Pydantic AI CLI v2.32.1 using custom agent 0005_clai_cli:agent with ollama:gemma4:e2b
+$ uv run clai --model 'ollama:gemma4:e2b' --agent clai_cli:agent
+clai - Pydantic AI CLI v2.32.1 using custom agent clai_cli:agent with ollama:gemma4:e2b
 clai ➤ bonjour !
 Bonjour ! Comment puis-je vous aider aujourd'hui ? 😊                     
 clai ➤
@@ -393,9 +393,9 @@ Voir la [documentation](https://pydantic.dev/docs/ai/integrations/cli/#cli-usage
 Vous préférez une interface web ? Pydantic AI peut vous en fournir une très facilement.
 
 ```shell
-uv run clai web --model 'ollama:gemma4:e2b' --agent 0005_clai_cli:agent
+uv run clai web --model 'ollama:gemma4:e2b' --agent clai_cli:agent
 
-Starting chat UI for 0005_clai_cli:agent...
+Starting chat UI for clai_cli:agent...
 Open your browser at: http://127.0.0.1:7932
 Press Ctrl+C to stop the server
 
@@ -412,7 +412,7 @@ INFO:     Uvicorn running on http://127.0.0.1:7932 (Press CTRL+C to quit)
 Maintenant que nous avons vu comment avoir accès à un REPL en CLI ou en WebUI, et que nous avons vu comment gérer la persistance de l'historique, nous allons voir comment personnaliser le comportement de notre agent.
 
 ```python
-# 0006_system_prompt.py
+# system_prompt.py
 from pydantic_ai import Agent
 
 # Définition d'un prompt système pour notre agent
@@ -427,7 +427,7 @@ agent = Agent(system_prompt=system_prompt)
 Lancement de l'agent dans la WebUI :
 
 ```shell
-$ uv run clai web --model 'ollama:gemma4:e2b' --agent 0006_system_prompt:agent
+$ uv run clai web --model 'ollama:gemma4:e2b' --agent system_prompt:agent
 ```
 
 ![L'assistant parle en coréen sous titré bilingue](images/system_prompt.png)
@@ -437,7 +437,7 @@ $ uv run clai web --model 'ollama:gemma4:e2b' --agent 0006_system_prompt:agent
 Il est possible de demander à l'agent de renvoyer des objets typés. Par exemple, on peut lui demander de créer un personnage de jeu de rôle directement utilisable dans le code python
 
 ```python
-# 0007_chargen.py
+# chargen.py
 from dataclasses import dataclass
 from enum import StrEnum
 
@@ -490,7 +490,7 @@ print(r.output.name, r.output.age, r.output.gender, r.output.race)
 ```
 
 ```shell
-$ uv run 0007_chargen.py
+$ uv run chargen.py
 Character(name='Elara Shadowstep', age=24, gender=<Gender.FEMALE: 'female'>, race=<Race.ELF: 'elf'>, description="L'Élira est une elfe forestière de 14 ans, dont le regard semble fixé sur quelque chose d'éloigné. Elle porte ses poils sombres et un manteau en velours sombre qui lui permet souvent de glisser dans les branches les plus hautes. Ses yeux verts clairs laissent passer des reflets dorés.")
 Elara Shadowstep 24 female elf
 ```
