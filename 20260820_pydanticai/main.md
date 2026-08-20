@@ -179,6 +179,8 @@ Bonjour ! Comment puis-je vous aider aujourd'hui ?
 
 Oui, c'était pas très passionnant. Mais maintenant vous pouvez faire des inférences programmatiquement. Y'a plus qu'à itérer sur le concept. Littéralement.
 
+## Logfire
+
 ## Premier REPL
 
 Pour rendre le chatbot interactif, on peut faire un REPL (Read-Eval-Print Loop) :
@@ -430,13 +432,78 @@ $ uv run clai web --model 'ollama:gemma4:e2b' --agent 0006_system_prompt:agent
 
 ![L'assistant parle en coréen sous titré bilingue](images/system_prompt.png)
 
+## Sortie typée
+
+Il est possible de demander à l'agent de renvoyer des objets typés. Par exemple, on peut lui demander de créer un personnage de jeu de rôle directement utilisable dans le code python
+
+```python
+# 0007_chargen.py
+from dataclasses import dataclass
+from enum import StrEnum
+
+from pydantic_ai import Agent
+
+
+class Gender(StrEnum):
+    # Vanilla genders
+    FEMALE = "female"
+    MALE = "male"
+
+    # Spicy genders
+    # TODO:
+
+
+class Race(StrEnum):
+    HUMAN = "human"
+    ELF = "elf"
+    DWARF = "dwarf"
+    ORC = "orc"
+    TROLL = "troll"
+    GOBLIN = "goblin"
+    HALFLING = "halfling"
+    GNOME = "gnome"
+    DRAGONBORN = "dragonborn"
+    TIEFLING = "tiefling"
+
+
+@dataclass
+class Character:
+    name: str
+    age: int
+    gender: Gender
+    race: Race
+    description: str
+
+
+agent = Agent("ollama:qwen3.5:2b")
+
+# Demande à l'agent de générer un personnage pour un jeu de rôle
+r = agent.run_sync(
+    "Génère un personnage pour un jeu de role",
+    output_type=Character,
+)
+
+# Affiche le type de l'objet retourné et ses attributs
+assert isinstance(r.output, Character)
+print(r.output)
+print(r.output.name, r.output.age, r.output.gender, r.output.race)
+```
+
+```shell
+$ uv run 0007_chargen.py
+Character(name='Elara Shadowstep', age=24, gender=<Gender.FEMALE: 'female'>, race=<Race.ELF: 'elf'>, description="L'Élira est une elfe forestière de 14 ans, dont le regard semble fixé sur quelque chose d'éloigné. Elle porte ses poils sombres et un manteau en velours sombre qui lui permet souvent de glisser dans les branches les plus hautes. Ses yeux verts clairs laissent passer des reflets dorés.")
+Elara Shadowstep 24 female elf
+```
+
+
 ## Outils
+
+## Dépendances
 
 ## MCP
 
 ## Capacités
 
-## Logfire
 
 ## Monty, VM python
 
