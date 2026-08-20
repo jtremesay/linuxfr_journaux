@@ -368,9 +368,48 @@ Si vous souhaitez me dire qui vous êtes (vos centres d'intérêt, ce que vous f
 pydantic-ai ➤
 ```
 
+Remarque : y'a trouzemille façon d'utiliser `clai` en tant qu'outil cli. Par exemple, vous pouvez l'utiliser pour lancer votre agent directement depuis la ligne de commande :
+
+```python
+# 0006_clai_cli.py
+from pydantic_ai import Agent
+
+agent = Agent()
+```
+
+```shell
+$ uv run clai --model 'ollama:gemma4:e2b' --agent 0005_clai_cli:agent
+clai - Pydantic AI CLI v2.32.1 using custom agent 0005_clai_cli:agent with ollama:gemma4:e2b
+clai ➤ bonjour !
+Bonjour ! Comment puis-je vous aider aujourd'hui ? 😊                     
+clai ➤
+```
+Voir la [documentation](https://pydantic.dev/docs/ai/integrations/cli/#cli-usage) pour plus d'options.
+
 ## Web UI
 
+Vous préférez une interface web ? Pydantic AI peut vous en fournir une très facilement.
+
+```shell
+uv run clai web --model 'ollama:gemma4:e2b' --agent 0005_clai_cli:agent
+
+Starting chat UI for 0005_clai_cli:agent...
+Open your browser at: http://127.0.0.1:7932
+Press Ctrl+C to stop the server
+
+INFO:     Started server process [390973]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:7932 (Press CTRL+C to quit)
+```
+
+![Capture d'une conversation dans la webui de pydantic ai. L'humain dit "bonjour !", l'agent répond "Bonjour ! Comment allez -vous ? Que puis-je faire pour vous aider aujourd'hui ? 😊". C'était pas très passionant hein ? Commente "Chewbacca" pour gagner notre grand jeu !](images/webui.png)
+
 ## Prompt système
+
+Maintenant que nous avons vu comment avoir accès à un REPL en CLI ou en WebUI, et que nous avons vu comment gérer la persistance de l'historique, nous allons voir comment personnaliser le comportement de notre agent.
+
+```python
 
 ## Outils
 
@@ -379,3 +418,5 @@ pydantic-ai ➤
 ## Capacités
 
 ## Logfire
+
+## Chatbot tribune linuxfr
