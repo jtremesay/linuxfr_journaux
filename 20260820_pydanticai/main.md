@@ -758,14 +758,11 @@ C'est du soleil ! Le temps à Montpellier est ensoleillé aujourd'hui. Enchaux a
 ```
 
 ## MCP
-
 ## Capacités
-
-
+## Skills
 ## Monty, VM python
-
+## Durability
 ## Chatbot tribune linuxfr
-
 ## Conclusion
 
 Code et dernière version du journal : 
