@@ -225,6 +225,10 @@ C'est à nous de gérer la mémoire.
 
 ## Historique
 
+Ici on va voir comment gérer l'historique de la conversation pour que le bot se souvienne de ce qu'on lui a dit. Pydantic AI fournit un mécanisme simple pour gérer l'historique des messages. Vous pouvez passer l'historique à chaque appel à `agent.run_sync()` via le paramètre `message_history`. L'agent utilisera cet historique pour maintenir le contexte de la conversation.
+
+https://pydantic.dev/docs/ai/core-concepts/message-history/#_top
+
 ```python
 # history.py
 from pydantic_ai import Agent
@@ -758,10 +762,39 @@ C'est du soleil ! Le temps à Montpellier est ensoleillé aujourd'hui. Enchaux a
 ```
 
 ## MCP
+
+[MCP](https://fr.wikipedia.org/wiki/Model_Context_Protocol) (Model Context Protocol) est un protocole pour permettre à un LLM d'interagir avec des outils externes. Pydantic AI supporte nativement MCP, et donc vous pouvez créer vos propres outils et les exposer à votre agent via MCP.
+
+https://pydantic.dev/docs/ai/mcp/client/#streamable-http
+
+```shell
+$ uv add pydantic-ai-slim[mcp]
+```
+
+```python
+# mcp.py
+from fastmcp.client.transports import StdioTransport, StreamableHttpTransport
+from pydantic_ai import Agent
+from pydantic_ai.mcp import MCPToolset
+
+agent = Agent(
+    "ollama:qwen3.5:2b",
+    toolsets=[
+        MCPToolset(
+            StdioTransport(command="uv", args=["run", "mcp_demo1.py"]),
+        ),
+        MCPToolset(
+            StreamableHttpTransport("http://localhost:8000/mcp"),
+        ),
+    ],
+)
+
+
+
 ## Capacités
 ## Skills
 ## Monty, VM python
-## Durability
+## Durable execution
 ## Chatbot tribune linuxfr
 ## Conclusion
 
