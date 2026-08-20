@@ -181,6 +181,38 @@ Oui, c'était pas très passionnant. Mais maintenant vous pouvez faire des infé
 
 ## Logfire
 
+[Logfire](https://pydantic.dev/docs/logfire/get-started/) est un outil pour facilement ajouter le support d'[OpenTelemetry](https://opentelemetry.io/) à votre application. Pydantic AI supporte nativement Logfire, et donc OpenTelemetry. Avec ça vous allez pouvoir capturer tout ce qu'il se passe dans votre application. On est surtout intéressé par le fait que ça affiche de jolis logs pour voir ce qu'il se passe. Pour l'instant, c'est pas super utile. Mais quand l'agent commencera à utilser des outils, ça sera bien pratique pour voir ce qu'il fait.
+
+
+```shell
+$ uv add pydantic-ai-slim[logfire]
+```
+
+```python
+# logfire_setup.py
+import logfire
+from pydantic_ai import Agent
+
+# Configuration de logfire pour instrumenter Pydantic AI globalement
+logfire.configure(send_to_logfire="if-token-present")
+logfire.instrument_pydantic_ai()
+
+agent = Agent("ollama:gemma4:e2b")
+r = agent.run_sync("Bonjour")
+print(r.output)
+
+# Peut sinon s'activer par agent :
+agent = Agent("ollama:gemma4:e2b")
+agent.instrument_all()
+```
+
+```shell
+$ uv run logfire_setup.py 
+22:29:38.220 agent run
+22:29:38.221   chat gemma4:e2b
+Bonjour ! Comment puis-je vous aider aujourd'hui ?
+```
+
 ## Premier REPL
 
 Pour rendre le chatbot interactif, on peut faire un REPL (Read-Eval-Print Loop) :
