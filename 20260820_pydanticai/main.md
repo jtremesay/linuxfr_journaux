@@ -179,40 +179,6 @@ Bonjour ! Comment puis-je vous aider aujourd'hui ?
 
 Oui, c'était pas très passionnant. Mais maintenant vous pouvez faire des inférences programmatiquement. Y'a plus qu'à itérer sur le concept. Littéralement.
 
-## Logfire
-
-[Logfire](https://pydantic.dev/docs/logfire/get-started/) est un outil pour facilement ajouter le support d'[OpenTelemetry](https://opentelemetry.io/) à votre application. Pydantic AI supporte nativement Logfire, et donc OpenTelemetry. Avec ça vous allez pouvoir capturer tout ce qu'il se passe dans votre application. On est surtout intéressé par le fait que ça affiche de jolis logs pour voir ce qu'il se passe. Pour l'instant, c'est pas super utile. Mais quand l'agent commencera à utilser des outils, ça sera bien pratique pour voir ce qu'il fait.
-
-
-```shell
-$ uv add pydantic-ai-slim[logfire]
-```
-
-```python
-# logfire_setup.py
-import logfire
-from pydantic_ai import Agent
-
-# Configuration de logfire pour instrumenter Pydantic AI globalement
-logfire.configure(send_to_logfire="if-token-present")
-logfire.instrument_pydantic_ai()
-
-agent = Agent("ollama:gemma4:e2b")
-r = agent.run_sync("Bonjour")
-print(r.output)
-
-# Peut sinon s'activer par agent :
-agent = Agent("ollama:gemma4:e2b")
-agent.instrument_all()
-```
-
-```shell
-$ uv run logfire_setup.py 
-22:29:38.220 agent run
-22:29:38.221   chat gemma4:e2b
-Bonjour ! Comment puis-je vous aider aujourd'hui ?
-```
-
 ## Premier REPL
 
 Pour rendre le chatbot interactif, on peut faire un REPL (Read-Eval-Print Loop) :
@@ -439,6 +405,41 @@ INFO:     Uvicorn running on http://127.0.0.1:7932 (Press CTRL+C to quit)
 
 ![Capture d'une conversation dans la webui de pydantic ai. L'humain dit "bonjour !", l'agent répond "Bonjour ! Comment allez -vous ? Que puis-je faire pour vous aider aujourd'hui ? 😊". C'était pas très passionant hein ? Commente "Chewbacca" pour gagner notre grand jeu !](images/webui.png)
 
+
+## Logfire
+
+[Logfire](https://pydantic.dev/docs/logfire/get-started/) est un outil pour facilement ajouter le support d'[OpenTelemetry](https://opentelemetry.io/) à votre application. Pydantic AI supporte nativement Logfire, et donc OpenTelemetry. Avec ça vous allez pouvoir capturer tout ce qu'il se passe dans votre application. On est surtout intéressé par le fait que ça affiche de jolis logs pour voir ce qu'il se passe. Pour l'instant, c'est pas super utile. Mais quand l'agent commencera à utilser des outils, ça sera bien pratique pour voir ce qu'il fait.
+
+
+```shell
+$ uv add pydantic-ai-slim[logfire]
+```
+
+```python
+# logfire_setup.py
+import logfire
+from pydantic_ai import Agent
+
+# Configuration de logfire pour instrumenter Pydantic AI globalement
+logfire.configure(send_to_logfire="if-token-present")
+logfire.instrument_pydantic_ai()
+
+agent = Agent("ollama:gemma4:e2b")
+r = agent.run_sync("Bonjour")
+print(r.output)
+
+# Peut sinon s'activer par agent :
+agent = Agent("ollama:gemma4:e2b")
+agent.instrument_all()
+```
+
+```shell
+$ uv run logfire_setup.py 
+22:29:38.220 agent run
+22:29:38.221   chat gemma4:e2b
+Bonjour ! Comment puis-je vous aider aujourd'hui ?
+```
+
 ## Prompt système
 
 Maintenant que nous avons vu comment avoir accès à un REPL en CLI ou en WebUI, et que nous avons vu comment gérer la persistance de l'historique, nous allons voir comment personnaliser le comportement de notre agent.
@@ -463,6 +464,85 @@ $ uv run clai web --model 'ollama:gemma4:e2b' --agent system_prompt:agent
 ```
 
 ![L'assistant parle en coréen sous titré bilingue](images/system_prompt.png)
+
+## Prompt dynamique
+
+Il est possible de définir le prompt au runtime. Par exemple là l'heure de début de conversation est automatiquement injectée dans le prompt système :
+
+```python
+# system_prompt_static.py
+from datetime import UTC, datetime
+
+from pydantic_ai import Agent
+
+# Définition d'un prompt système pour notre agent
+system_prompt = """
+Tu es un assistant coréen, tu ne parles que en coréen sous titré bilingue.
+"""
+
+# Création de notre agent avec le prompt système défini ci-dessus
+agent = Agent(system_prompt=system_prompt)
+
+
+# Ce decorateur indique que la fonction suivante est utilisée pour générer un prompt système
+@agent.system_prompt
+def system_prompt_conversation_start() -> str:
+    return datetime.now(UTC).strftime(
+        "The conversation started the %Y-%m-%d at %H:%M:%S UTC"
+    )
+```
+
+```shell
+$ date
+Thu Aug 20 10:48:58 PM CEST 2026
+$ uv run clai --model 'ollama:gemma4:e2b' --agent system_prompt_static:agent
+clai - Pydantic AI CLI v2.32.1 using custom agent system_prompt_static:agent with ollama:gemma4:e2b
+clai ➤ a quelle heure a commencée cette conversation ?
+이 대화는 2026년 8월 20일 20:49:11 UTC에 시작되었습니다.
+
+(This conversation started at 2026-08-20 at 20:49:11 UTC.)
+clai ➤
+```
+
+Il est à noter que le prompt système n'est exécuté qu'une seule fois au début de la conversation. Il n'est pas réévalué à chaque message. Vous demander à pydantic ai de rentre votre prompt dynamique afin de le réévaluer à chaque message (RIP votre caching) :
+
+```python
+# system_prompt_dynamic.py
+from datetime import UTC, datetime
+
+from pydantic_ai import Agent
+
+agent = Agent(
+    system_prompt="Tu es un assistant coréen, tu ne parles que en coréen sous titré bilingue."
+)
+
+
+@agent.system_prompt
+def system_prompt_conversation_start() -> str:
+    return datetime.now(UTC).strftime(
+        "The conversation started the %Y-%m-%d at %H:%M:%S UTC"
+    )
+
+
+# Ce decorateur indique que la fonction suivante est utilisée pour générer un prompt système dynamique
+@agent.system_prompt(dynamic=True)
+def system_prompt_timestamp() -> str:
+    return datetime.now(UTC).strftime("The current time is %Y-%m-%d at %H:%M:%S UTC")
+```
+
+```shell
+uv run clai --model 'ollama:gemma4:e2b' --agent system_prompt_dynamic:agent
+clai - Pydantic AI CLI v2.32.1 using custom agent system_prompt_dynamic:agent with ollama:gemma4:e2b
+clai ➤ quelle heure est-il ?
+현재 시간은 2026년 8월 20일 20시 58분 41초 (UTC)입니다. (The current time is August 20, 2026, 20:58:41 (UTC).)                                     
+clai ➤ et maintenant ?
+현재 시간은 2026년 8월 20일 20시 58분 55초 (UTC)입니다. (The current time is August 20, 2026, 20:58:55 (UTC).)                                     
+clai ➤ a quelle heure a commencée cette conversation ?
+이 대화는 2026년 8월 20일 20시 58분 41초 (UTC)에 시작되었습니다. (This conversation started at 20:58:41 UTC on August 20, 2026.)                   
+clai ➤ depuis combien de temps dure cette conversation ?
+이 대화는 43초 동안 진행되었습니다. (This conversation has lasted for 43 seconds.)      
+```
+
 
 ## Sortie typée
 

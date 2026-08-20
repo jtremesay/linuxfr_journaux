@@ -11,3 +11,8 @@ dependencies = [
     "clai>=2.32.1",
     "pydantic-ai-slim[openai]>=2.32.1",
 ]
+
+[dependency-groups]
+dev = [
+    "ipython>=9.16.1",
+]
