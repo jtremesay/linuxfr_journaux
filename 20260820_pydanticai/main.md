@@ -610,6 +610,112 @@ Elara Shadowstep 24 female elf
 
 ## Outils
 
+Nous allons maintenant donner à notre agent la possibilité d'utiliser des outils. Les outils sont des fonctions python que l'agent peut appeler via un système de RPC (Remote Procedure Call). L'agent peut ainsi interagir avec le monde extérieur, effectuer des calculs, accéder à des bases de données, etc.
+
+```shell
+$ uv add pydantic-ai-slim[web-fetch]
+```
+
+```python
+# tools.py
+from dataclasses import dataclass
+from xml.etree import ElementTree as ET
+
+import httpx2
+import logfire
+from pydantic_ai import Agent
+from pydantic_ai.common_tools.web_fetch import web_fetch_tool
+
+logfire.configure(send_to_logfire="if-token-present")
+
+agent = Agent(
+    "ollama:gemma4:e2b",
+    tools=[
+        web_fetch_tool()  # Donne accès à l'outil web_fetch_tool pour récupérer des informations depuis le web
+    ],
+)
+agent.instrument_all()
+
+
+@dataclass
+class AtomEntry:
+    title: str
+    link: str
+    content: str
+
+
+# Ce decorateur indique que la fonction suivante est un outil utilisable par l'agent
+@agent.tool_plain
+def get_linuxfr_atom_feed() -> list[AtomEntry]:
+    feed_url = "https://linuxfr.org/news.atom"
+    r = httpx2.get(feed_url)
+    r.raise_for_status()
+
+    root = ET.fromstring(r.text)
+
+    entries = []
+    for entry_elem in root.findall("{http://www.w3.org/2005/Atom}entry"):
+        title = entry_elem.find("{http://www.w3.org/2005/Atom}title").text
+        link = entry_elem.find("{http://www.w3.org/2005/Atom}link").attrib["href"]
+        content = entry_elem.find("{http://www.w3.org/2005/Atom}content").text
+        entries.append(AtomEntry(title=title, link=link, content=content))
+
+    return entries
+```
+
+```shell
+$ uv run clai --model 'ollama:qwen3.5:2b' --agent tools:agent
+clai - Pydantic AI CLI v2.32.1 using custom agent tools:agent with ollama:qwen3.5:2b
+clai ➤ quels sont les dernières news de linuxfr ?
+23:16:39.025 agent run
+23:16:39.026   chat qwen3.5:2b
+23:16:45.268   running tool: get_linuxfr_atom_feed
+23:16:45.703   chat qwen3.5:2b
+Voici un récapitulatif des principales nouveautés de la version 4.0 de G'MIC :                                                                     
+
+### 🎯 Nouvelle version majeure : G'MIC 4.0
+
+ • Maturité : Le projet marque désormais la phase 18, après plus d'un siècle (17 ans) de développement sur une vingtaine de logiciels et cent      
+   millions de lignes de code.                                                                                                                     
+ • Facilité d'utilisation : L'installation se simplifie pour tous les utilisateurs grâce à des empaquetages standards (via GIMP ou Snap Store).    
+
+### 🌐 Écosystème et intégrations
+
+ • Des projets liés aux extensions ont annoncé l'intégration de G'MIC-Qt :                                                                         
+    • G'MIC-GEGL : Expose les filtres sous GEGL.                                                                                                   
+    • PhotoFlare : Intègre le greffon dans son éditeur multiplateforme.                                                                            
+    • gmic-affinity : Développeur en Rust pour Affinity Photo (compatibilité macOS à venir).                                                       
+
+### 📺 Présentation publique
+
+ • Une présentation sur 25 ans du traitement libre des images numériques a été faite au laboratoire LRDE de l'EPITA (May 2026) et enregistrée.     
+
+## 🔧 Les outils créatifs disponibles :
+
+Le projet permet d'appliquer rapidement des effets graphiques, notamment via l'équation des ondes pour déformer des images sur leurs contours      
+anisotropes, offrant un puissant outil pour la créativité dans la ligne de commande.                                                               
+clai ➤ ça parle de quoi ? https://jtremesay.org/
+23:17:20.994 agent run
+23:17:20.996   chat qwen3.5:2b
+23:17:27.087   running tool: web_fetch
+23:17:27.186   chat qwen3.5:2b
+Ce n'est pas lié au projet G'MIC - il s'agit du site personnel de Jonathan Tremesaygues, un développeur indépendant dont l'univers est centré sur  
+la création de moteurs 3D, des algorithmes avancés et des projets open source en rust.                                                             
+
+## Ce qu'il peut contenir :
+
+ • Raycasting (calculer une trajectoire pour voir à travers les murs comme dans Wolfenstein 3D)                                                    
+ • Simulation d'éolienne via scada player                                                                                                          
+ • Traitement de texte pour créer des particules animées                                                                                           
+ • Calculs mathématiques (pi, tris animés)                                                                                                         
+ • Architectures low-level (MIPS, FPGA avec kFPGA !)                                                                                               
+ • Raytraceurs personnalisés                                                                                                                       
+
+C'est un profil de développeur puriste qui a traversé différents domaines (jeux vidéo, traitement numérique des images, systèmes embarqués) pour   
+créer son propre moteur 3D.                                                                                                                        
+clai ➤
+```
+
 ## Dépendances
 
 ## MCP
