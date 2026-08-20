@@ -150,5 +150,176 @@ Moi je vais utiliser Ollama qui est compatible OpenAI API, il me faut ajouter la
 $ uv add pydantic-ai-slim[openai]
 ```
 
-## Votre premier chatbot
+Et comme je suis une grosse feignasse, j'exporte la variable d'environnement `OLLAMA_BASE_URL` afin qu'il utilise automatiquement le serveur Ollama local :
 
+```shell
+$ export OLLAMA_BASE_URL='http://localhost:11434/v1'
+```
+
+## Votre première inférence
+
+```python
+# 0001_first_inference.py
+from pydantic_ai import Agent
+
+# Création de notre agent
+agent = Agent("ollama:gemma4:e2b")
+
+# Requête simple à l'agent
+r = agent.run_sync("Bonjour")
+
+# Affichage de la réponse
+print(r.output)
+```
+
+```shell
+$ uv run 0001_first_inference.py
+Bonjour ! Comment puis-je vous aider aujourd'hui ?
+```
+
+Oui, c'était pas très passionnant. Mais maintenant vous pouvez faire des inférences programmatiquement. Y'a plus qu'à itérer sur le concept. Littéralement.
+
+## Premier REPL
+
+Pour rendre le chatbot interactif, on peut faire un REPL (Read-Eval-Print Loop) :
+
+```python
+# 0002_repl.py
+from pydantic_ai import Agent
+
+agent = Agent("ollama:gemma4:e2b")
+
+# Boucle REPL pour interagir avec l'agent
+while True:
+    try:
+        # Demande à l'utilisateur d'entrer un message
+        user_input = input("Vous: ")
+
+        # Vérifie si l'utilisateur veut quitter le REPL
+        if user_input.strip().lower() in ["exit", "quit"]:
+            raise StopIteration
+    except (KeyboardInterrupt, EOFError, StopIteration):
+        # Gestion de l'interruption du REPL (Ctrl+C, Ctrl+D ou "exit"/"quit")
+        print("\nAu revoir !")
+        break
+
+    # Envoie le message de l'utilisateur à l'agent et affiche la réponse
+    r = agent.run_sync(user_input)
+    print(f"Bot: {r.output}")
+```
+
+```shell
+$ uv run 0002_repl.py 
+Vous: bonjour !
+Bot: Bonjour ! Comment puis-je vous aider aujourd'hui ? 😊
+Vous: je suis bob !
+Bot: Bonjour Bob ! Comment puis-je t'aider aujourd'hui ? 😊
+Vous: qui suis-je ?
+Bot: Je suis désolé, mais je n'ai aucune information pour savoir qui vous êtes.
+
+Pour que je puisse vous répondre, pourriez-vous me donner plus de contexte ? (Par exemple, est-ce une question sur votre identité, votre rôle, ou autre chose ?)
+```
+
+Hum, le bot ne se souvient pas de ce que je lui ai dit. C'est normal, il n'y a pas de mémoire. Chaque nouvelle inférence est indépendante de la précédente. 
+C'est à nous de gérer la mémoire.
+
+## Historique
+
+```python
+# 0003_history.py
+from pydantic_ai import Agent
+
+agent = Agent("ollama:gemma4:e2b")
+
+# Historique de la conversation pour maintenir le contexte
+history = []
+
+while True:
+    try:
+        user_input = input("Vous: ")
+        if user_input.strip().lower() in ["exit", "quit"]:
+            raise KeyboardInterrupt
+    except (KeyboardInterrupt, EOFError):
+        print("\nAu revoir !")
+        break
+
+    r = agent.run_sync(user_input, message_history=history)
+    print(f"Bot: {r.output}")
+
+    # Mise à jour de l'historique avec les nouveaux messages
+    history += r.new_messages()
+```
+
+```shell
+$ uv run 0003_history.py 
+Vous: Bonjour !
+Bot: Bonjour ! Comment puis-je vous aider aujourd'hui ?
+Vous: je suis Bob
+Bot: Enchanté de faire votre connaissance, Bob ! 😊
+
+Comment puis-je vous assister ? Avez-vous une question, besoin d'aide pour une tâche, ou souhaitez-vous simplement discuter ?
+Vous: qui suis-je ?
+Bot: D'après notre conversation, je sais que vous vous appelez **Bob**.
+
+Si vous faites référence à une identité plus large (votre profession, votre histoire, etc.), je n'ai pas cette information.
+
+Y a-t-il quelque chose que vous aimeriez me dire sur vous ?
+```
+
+Cette fois-ci, le bot se souvient de ce que je lui ai dit. Il a gardé en mémoire que je m'appelle Bob. C'est mieux.
+
+## Historique persistant
+
+Maintenant, nous allons voir comment rendre l'historique persistant entre les executions du programme.
+
+```python
+# 0004_persistant_history.py
+from pathlib import Path
+
+from pydantic_ai import Agent
+from pydantic_ai.messages import ModelMessagesTypeAdapter
+
+HISTORY_FILE = Path().cwd() / "history.json"
+
+agent = Agent("ollama:gemma4:e2b")
+
+try:
+    # Chargement de l'historique des messages depuis le fichier JSON
+    history = ModelMessagesTypeAdapter.validate_json(HISTORY_FILE.read_bytes())
+except FileNotFoundError:
+    # Pas de fichier d'historique, on commence avec un historique vide
+    history = []
+
+while True:
+    try:
+        user_input = input("Vous: ")
+        if user_input.strip().lower() in ["exit", "quit"]:
+            raise KeyboardInterrupt
+    except (KeyboardInterrupt, EOFError):
+        print("\nAu revoir !")
+        break
+
+    r = agent.run_sync(user_input, message_history=history)
+    print(f"Bot: {r.output}")
+
+    history += r.new_messages()
+
+    # Sauvegarde de l'historique des messages dans le fichier JSON
+    HISTORY_FILE.write_bytes(ModelMessagesTypeAdapter.dump_json(history))
+```
+
+```shell
+$ uv run 0004_persistant_history.py 
+Vous: bonjour ! je suis Bob !
+Bot: Bonjour Bob ! Enchanté de faire ta connaissance. 😊
+
+Comment puis-je t'aider aujourd'hui ?
+Vous: 
+Au revoir !
+$ uv run 0004_persistant_history.py
+Vous: qui suis-je ?
+Bot: Basé sur notre conversation, tu m'as dit que tu t'appelles **Bob** !
+
+Si tu voulais me dire autre chose, n'hésite pas à me le faire savoir ! 😊
+Vous: 
+```
