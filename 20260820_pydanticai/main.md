@@ -441,3 +441,8 @@ $ uv run clai web --model 'ollama:gemma4:e2b' --agent 0006_system_prompt:agent
 ## Monty, VM python
 
 ## Chatbot tribune linuxfr
+
+## Conclusion
+
+Code et dernière version du journal : 
+https://github.com/jtremesay/linuxfr_journaux/tree/main/20260820_pydanticai
