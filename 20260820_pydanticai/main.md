@@ -788,10 +788,16 @@ agent = Agent(
         ),
     ],
 )
-
-
+```
 
 ## Capacités
+
+Les capacités sont un moyen de créer des ensembles cohérents de prompts et outils pour votre agent.
+
+https://pydantic.dev/docs/ai/capabilities/overview/
+
+
+
 ## Skills
 ## Monty, VM python
 ## Durable execution
